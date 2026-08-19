@@ -27,11 +27,3 @@ macos-harness <<'PY'
 print(mac.see("Finder"))
 PY
 ```
-
-Anonymous telemetry contains only the CLI command category, success, duration,
-package version, OS/architecture, and detected agent client. It never includes
-prompts, app names, screenshots, text, scripts, paths, or window titles.
-
-```bash
-macos-harness telemetry disable
-```

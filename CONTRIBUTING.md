@@ -9,5 +9,5 @@ uv run ruff check .
 uv run pytest
 ```
 
-Pull requests should preserve three invariants: never move the physical pointer,
-never activate or raise a target app, and never send user data through telemetry.
+Pull requests should preserve two invariants: never move the physical pointer and
+never activate or raise a target app.
