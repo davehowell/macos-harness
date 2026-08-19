@@ -7,15 +7,12 @@ import code
 import json
 import subprocess
 import sys
-import time
 from importlib import resources
 from pathlib import Path
 from typing import Any
 
 from .browser import BrowserHarness
 from .macos import MacOS, MacOSError
-from .telemetry import capture_cli
-from .telemetry import run_cli as run_telemetry_cli
 
 
 def _namespace() -> dict[str, Any]:
@@ -62,10 +59,6 @@ def _build_parser() -> argparse.ArgumentParser:
     subparsers.add_parser("apps", help="list running macOS applications")
     subparsers.add_parser("repl", help="start a persistent interactive Python session")
     subparsers.add_parser("skill", help="print the macOS Harness skill")
-    telemetry = subparsers.add_parser(
-        "telemetry", help="inspect or change anonymous telemetry"
-    )
-    telemetry.add_argument("action", nargs="?", choices=("status", "enable", "disable"))
     see = subparsers.add_parser("see", help="capture a bounded application window")
     see.add_argument("app")
     see.add_argument("--max-width", type=int, default=1280)
@@ -85,27 +78,19 @@ def _build_parser() -> argparse.ArgumentParser:
 def main(argv: list[str] | None = None) -> int:
     parser = _build_parser()
     args = parser.parse_args(argv)
-    if args.command == "telemetry":
-        return run_telemetry_cli([args.action] if args.action else [])
-
-    started = time.monotonic()
-    result: int | None = None
     try:
         if args.command == "doctor":
             mac = MacOS()
             if args.request:
                 mac.request_permissions()
             print(json.dumps(mac.doctor(), indent=2))
-            result = 0
-            return result
+            return 0
         if args.command == "apps":
             print(json.dumps(MacOS().list_apps(), indent=2))
-            result = 0
-            return result
+            return 0
         if args.command == "skill":
             print(_skill_text(), end="")
-            result = 0
-            return result
+            return 0
         if args.command == "repl":
             code.interact(
                 banner=(
@@ -115,18 +100,16 @@ def main(argv: list[str] | None = None) -> int:
                 local=_namespace(),
                 exitmsg="",
             )
-            result = 0
-            return result
+            return 0
         if args.command == "see":
-            result = MacOS().see(
+            screenshot = MacOS().see(
                 args.app,
                 max_width=args.max_width,
                 max_height=args.max_height,
                 show_pointer=not args.no_pointer,
             )
-            print(json.dumps(result, indent=2, ensure_ascii=False))
-            result = 0
-            return result
+            print(json.dumps(screenshot, indent=2, ensure_ascii=False))
+            return 0
         if args.command == "state":
             state = MacOS().get_app_state(
                 args.app,
@@ -136,22 +119,16 @@ def main(argv: list[str] | None = None) -> int:
                 include_menu_bar=args.include_menu_bar,
             )
             print(json.dumps(state, indent=2, ensure_ascii=False))
-            result = 0
-            return result
+            return 0
         if args.command is None:
             if sys.stdin.isatty():
                 parser.print_help()
-                result = 2
-                return result
-            result = _execute(sys.stdin.read())
-            return result
+                return 2
+            return _execute(sys.stdin.read())
         parser.error(f"unknown command: {args.command}")
     except (MacOSError, RuntimeError) as exc:
         print(f"macos-harness: {exc}", file=sys.stderr)
-        result = 1
-        return result
-    finally:
-        capture_cli(args.command or "python", result == 0, time.monotonic() - started)
+        return 1
 
 
 if __name__ == "__main__":

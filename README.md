@@ -85,13 +85,4 @@ primitives and writes the rest.
 `macos-harness doctor` reports the macOS permissions actually needed. The harness
 never activates or raises a target app and never moves the physical pointer.
 
-Anonymous telemetry is enabled by default. It records only the CLI command
-category, success, duration, package version, OS/architecture, and detected agent
-client. It never records prompts, app names, screenshots, UI text, scripts, paths,
-or window titles.
-
-```bash
-macos-harness telemetry disable
-```
-
 Experimental. macOS only. [MIT licensed](LICENSE).
